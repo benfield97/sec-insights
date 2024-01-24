@@ -26,10 +26,10 @@
   .landing-page-gradient-1 {
     background-color: hsla(0,0%,100%,1);
     background-image:
-      radial-gradient(at 21% 11%, hsla(240,51%,82%,0.53) 0px, transparent 50%),
-      radial-gradient(at 85% 0%, hsla(46,57%,78%,0.52) 0px, transparent 50%),
-      radial-gradient(at 91% 36%, hsla(221,100%,88%,0.68) 0px, transparent 50%),
-      radial-gradient(at 8% 40%, hsla(323,82%,92%,0.46) 0px, transparent 50%);
+      radial-gradient(at 21% 11%, hsla(210,60%,80%,0.53) 0px, transparent 50%), /* Pastel blue */
+      radial-gradient(at 85% 0%, hsla(60,60%,80%,0.52) 0px, transparent 50%), /* Pastel yellow */
+      radial-gradient(at 91% 36%, hsla(210,60%,90%,0.68) 0px, transparent 50%), /* Lighter pastel blue */
+      radial-gradient(at 8% 40%, hsla(60,60%,90%,0.46) 0px, transparent 50%); /* Lighter pastel yellow */
   }
 }
 
