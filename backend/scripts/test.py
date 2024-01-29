@@ -19,3 +19,17 @@ print(parent_directory)
 # export PATH="$HOME/.local/bin:$PATH"
 # source ~/.zshrc
 
+# running with chat repl
+
+#poetry run python scripts/upsert_document.py URL
+#copy db ID
+
+#make chat
+# pick_docs
+# select_id id of docs
+#finish
+#create
+
+
+# test river URL https://drive.google.com/uc?export=download&id=12RbUiWXL2W0BogrhgilW7zdtR3W9P
+
