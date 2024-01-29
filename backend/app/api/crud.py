@@ -100,4 +100,23 @@ async def fetch_documents(
         stmt = stmt.where(Document.url == url)  # Fetch documents with the provided URL
     if limit is not None:
         stmt = stmt.limit(limit)  # Limit the number of results if a limit is provided
-    result = await db.execute(stmt) 
+    result = await db.execute(stmt)
+    documents = result.scalars().all()
+    return [schema.Document.from_orm(doc) for doc in documents]
+
+async def upsert_document_by_url(
+    db: AsyncSession, document: schema.Document
+) -> schema.Document:
+    """
+    Upsert a document
+    """
+    stmt = insert(Document).values(**document.dict(exclude_none=True))
+    stmt = stmt.on_conflict_do_update(
+        index_elements=[Document.url],
+        set_=document.dict(include={"metadata_map"}),
+    )
+    stmt = stmt.returning(Document)
+    result = await db.execute(stmt)
+    upserted_doc = schema.Document.from_orm(result.scalars().first())
+    await db.commit()
+    return upserted_doc
