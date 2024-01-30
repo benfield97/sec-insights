@@ -11,7 +11,19 @@ async def upsert_single_document(doc_url: str):
     if not doc_url or not doc_url.startswith('http'):
         print("DOC_URL must be an http(s) based url value")
         return
-    metadata_map = {}
+    metadata_map = {
+        'sec_document': {
+        "cik": "0001326801",
+        "year": '2022',
+        "doc_type": "10-K",
+        "company_name": "ahhh wtf holy shit who am i",
+        "company_ticker": "ARXIVTEST",
+        "accession_number": "0001326801-23-000013",
+        "filed_as_of_date": "2023-02-02T00:00:00",
+        "date_as_of_change": "2023-02-01T00:00:00",
+        "period_of_report_date": "2022-12-31T00:00:00"
+      }
+      }
     doc = Document(url=doc_url, metadata_map=metadata_map)
 
     async with SessionLocal() as db:

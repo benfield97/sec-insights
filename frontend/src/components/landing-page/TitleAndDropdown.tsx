@@ -1,87 +1,52 @@
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
-import React, { useEffect, useState } from "react";
-
-import { FiTrash2 } from "react-icons/fi";
-
-
-import cx from "classnames";
-import type { SelectOption } from "~/types/selection";
-
-import { DocumentSelectCombobox } from "~/components/landing-page/SelectTicker";
 import Select from "react-select";
-import {
-  MAX_NUMBER_OF_SELECTED_DOCUMENTS,
-  useDocumentSelector,
-} from "~/hooks/useDocumentSelector";
+import { FiTrash2 } from "react-icons/fi";
+import { useDocumentSelector } from "~/hooks/useDocumentSelector";
 import { backendClient } from "~/api/backend";
-import { AiOutlineArrowRight, AiTwotoneCalendar } from "react-icons/ai";
-import { CgFileDocument } from "react-icons/cg";
-import { customReactSelectStyles } from "~/styles/react-select";
-import { useIntercom } from "react-use-intercom";
-import { LoadingSpinner } from "~/components/basics/Loading";
 import useIsMobile from "~/hooks/utils/useIsMobile";
 
 export const TitleAndDropdown = () => {
   const router = useRouter();
-
   const { isMobile } = useIsMobile();
-
   const [isLoadingConversation, setIsLoadingConversation] = useState(false);
-  const handleSubmit = (event: { preventDefault: () => void }) => {
-    setIsLoadingConversation(true);
+
+  const {
+    availableDocuments,
+    selectedDocuments,
+    setSelectedDocuments,
+    handleRemoveDocument,
+    isDocumentSelectionEnabled,
+  } = useDocumentSelector();
+
+  const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
-    const selectedDocumentIds = selectedDocuments.map((val) => val.id);
+    setIsLoadingConversation(true);
+    const selectedDocumentIds = selectedDocuments.map((doc) => doc.id);
     backendClient
       .createConversation(selectedDocumentIds)
       .then((newConversationId) => {
         setIsLoadingConversation(false);
-        router
-          .push(`/conversation/${newConversationId}`)
-          .catch(() => console.log("error navigating to conversation"));
+        router.push(`/conversation/${newConversationId}`);
       })
-      .catch(() => console.log("error creating conversation "));
+      .catch(() => console.error("Error creating conversation"));
   };
 
-  const {
-    availableTickers,
-    availableDocumentTypes,
-    sortedAvailableYears,
-    selectedDocuments,
-    selectedTicker,
-    selectedDocumentType,
-    selectedYear,
-    setSelectedYear,
-    handleAddDocument,
-    handleRemoveDocument,
-    isDocumentSelectionEnabled,
-    isStartConversationButtonEnabled,
-    yearFocusRef,
-    documentTypeFocusRef,
-    selectTicker,
-    selectDocumentType,
-    shouldFocusCompanySelect,
-    setShouldFocusCompanySelect,
-    sortedSelectedDocuments,
-  } = useDocumentSelector();
-
-  const { boot } = useIntercom();
-
-  useEffect(() => {
-    boot();
-  }, []);
-
   return (
-    <div className="landing-page-gradient-1 relative flex h-max w-screen flex-col items-center font-lora ">
+    <div className="landing-page-gradient-1 relative flex h-max w-screen flex-col items-center font-lora">
+      {/* Header section with title */}
       <div className="mt-28 flex flex-col items-center">
         <div className="text-center text-4xl">
-          River Capital{'\'s'} <span className="font-bold">Company Oracle </span>
+          River Capital's <span className="font-bold">Company Oracle</span>
         </div>
         <div className="mt-4 flex items-center justify-center">
-          <div className=" text-center font-nunito">
+          <div className="text-center font-nunito">
             Upload your documents to begin.
           </div>
         </div>
       </div>
+
+      {/* Conditional rendering based on whether the device is mobile */}
       {isMobile ? (
         <div className="mt-12 flex h-1/5 w-11/12 rounded border p-4 text-center">
           <div className="text-xl font-bold">
@@ -89,174 +54,47 @@ export const TitleAndDropdown = () => {
           </div>
         </div>
       ) : (
-        <div className="mt-5 flex h-min w-11/12 max-w-[1200px] flex-col items-center justify-center rounded-lg border-2 bg-white sm:h-[400px] md:w-9/12 ">
+        <form className="mt-5 flex h-min w-11/12 max-w-[1200px] flex-col items-center justify-center rounded-lg border-2 bg-white sm:h-[400px] md:w-9/12" onSubmit={handleSubmit}>
           <div className="p-4 text-center text-xl font-bold">
-            Start your conversation by selecting the documents you want to
-            explore
-          </div>
-          <div className="h-1/8 flex w-full flex-wrap items-center justify-center font-nunito">
-            <div className="m-1 flex w-96 items-center">
-              <DocumentSelectCombobox
-                selectedItem={selectedTicker}
-                setSelectedItem={selectTicker}
-                availableDocuments={availableTickers}
-                shouldFocusTicker={shouldFocusCompanySelect}
-                setFocusState={setShouldFocusCompanySelect}
-              />
-              <div className="flex h-[41px] w-[40px] items-center justify-center bg-[#F7F7F7] pr-3">
-                <span className="mt-1 font-nunito text-[13px] font-bold text-[#7F7F7F]">
-                  ⌘K
-                </span>
-              </div>
-            </div>
-            <div className="m-1 flex h-[41px] w-56 items-center bg-[#F7F7F7]">
-              <div className="flex h-[41px] w-[30px] items-center justify-center bg-[#F7F7F7] pl-3">
-                <CgFileDocument size={30} />
-              </div>
-              <div className="flex-grow">
-                <Select
-                  openMenuOnFocus
-                  ref={documentTypeFocusRef}
-                  options={availableDocumentTypes}
-                  onChange={selectDocumentType}
-                  getOptionLabel={(option: SelectOption) => option.label}
-                  getOptionValue={(option: SelectOption) => option.value}
-                  value={selectedDocumentType}
-                  placeholder="Select Document Type"
-                  components={{
-                    IndicatorSeparator: () => null,
-                    DropdownIndicator: () => null,
-                  }}
-                  styles={customReactSelectStyles}
-                />
-              </div>
-            </div>
-            <div className="m-1 flex h-[41px] w-48 items-center rounded-e bg-[#F7F7F7]">
-              <div className="flex h-[41px] w-[30px] items-center justify-center bg-[#F7F7F7] pl-3">
-                <AiTwotoneCalendar size={30} />
-              </div>
-              <div className="flex-grow">
-                <Select
-                  openMenuOnFocus
-                  ref={yearFocusRef}
-                  options={sortedAvailableYears || []}
-                  getOptionLabel={(option: SelectOption) => option.label}
-                  getOptionValue={(option: SelectOption) => option.value}
-                  onChange={setSelectedYear}
-                  value={selectedYear}
-                  placeholder="Select Year"
-                  components={{
-                    IndicatorSeparator: () => null,
-                    DropdownIndicator: () => null,
-                  }}
-                  styles={customReactSelectStyles}
-                />
-              </div>
-            </div>
-            <div className="relative">
-              <button
-                className="m-4 rounded border bg-llama-indigo px-8 py-2 text-white hover:bg-[#3B3775] disabled:bg-gray-30"
-                onClick={handleAddDocument}
-                disabled={!isDocumentSelectionEnabled || !selectedYear}
-              >
-                Add
-              </button>
-
-              <div className="absolute -right-[10px] bottom-[-4px] w-[140px] font-nunito text-[10px] text-[#7F7F7F]">
-                {" "}
-                <span className="font-bold">Shift + Enter </span>to add to list{" "}
-              </div>
-            </div>
+            Start your conversation by selecting the documents you want to explore
           </div>
 
-          <div className="mt-2 flex h-full w-11/12 flex-col justify-start overflow-scroll px-4 ">
-            {selectedDocuments.length === 0 && (
-              <div className="m-4 flex h-full flex-col items-center justify-center bg-gray-00 font-nunito text-gray-90">
-                <div>
-                  <CgFileDocument size={46} />
-                </div>
-                <div className="w-84 text-center md:w-64">
-                  Use the document selector above to start adding documents
-                </div>
-              </div>
-            )}
-            {sortedSelectedDocuments.map((doc, index) => (
-              <div
-                key={index}
-                className={cx(
-                  index === 0 && "mt-2 border-t",
-                  "group flex items-center justify-between border-b p-1 font-nunito font-bold text-[#868686] hover:bg-[#EAEAF7] hover:text-[#350F66] "
-                )}
-              >
-                <div className="w-64 text-left">
-                  <span className="font-bold">{doc.ticker}</span> -{" "}
-                  {doc.fullName}
-                </div>
-                <div className="w-24 text-left">
-                  {doc.year} {doc.quarter && `Q${doc.quarter}`}
-                </div>
-                <div>{doc.docType}</div>
-                <button
-                  className="mr-4 group-hover:text-[#FF0000]"
-                  onClick={() => handleRemoveDocument(index)}
-                >
-                  <FiTrash2 size={24} />
+          {/* Document ID selection */}
+          <div className="my-4">
+          <Select
+            options={availableDocuments.map((doc) => ({ value: doc.id, label: doc.id }))}
+            onChange={(selectedOption) => {
+              if (selectedOption) {
+                const selectedDoc = availableDocuments.find(doc => doc.id === selectedOption.value);
+                if (selectedDoc) {
+                  setSelectedDocuments([selectedDoc]);
+                }
+              }
+            }}
+            placeholder="Select Document by ID"
+            isDisabled={!isDocumentSelectionEnabled}
+          />
+          </div>
+
+          {/* List of selected documents */}
+          <div className="w-full px-4">
+            {selectedDocuments.map((doc, index) => (
+              <div key={doc.id} className="flex items-center justify-between border-b p-2">
+                <span>{doc.id}</span>
+                <button onClick={() => handleRemoveDocument(index)}>
+                  <FiTrash2 />
                 </button>
               </div>
             ))}
           </div>
 
-          <div className="h-1/8 mt-2 flex w-full items-center justify-center rounded-lg bg-gray-00">
-            <div className="flex flex-wrap items-center justify-center">
-              {isDocumentSelectionEnabled && (
-                <>
-                  <div className="w-48 font-nunito md:ml-8 ">
-                    Add up to{" "}
-                    <span className="font-bold">
-                      {" "}
-                      {MAX_NUMBER_OF_SELECTED_DOCUMENTS -
-                        selectedDocuments.length}
-                    </span>{" "}
-                    {isStartConversationButtonEnabled ? (
-                      <>more docs</>
-                    ) : (
-                      <>docs</>
-                    )}
-                  </div>
-                  <div className="ml-1 font-nunito ">
-                    {isStartConversationButtonEnabled ? <>or</> : <>to</>}{" "}
-                  </div>
-                </>
-              )}
-              <div className="md:ml-12">
-                <button
-                  disabled={!isStartConversationButtonEnabled}
-                  onClick={handleSubmit}
-                  className={cx(
-                    "m-4 rounded border bg-llama-indigo px-6 py-2 font-nunito text-white hover:bg-[#3B3775] disabled:bg-gray-30 ",
-                    !isStartConversationButtonEnabled &&
-                      "border-gray-300 bg-gray-300"
-                  )}
-                >
-                  <div className="flex items-center justify-center">
-                    {isLoadingConversation ? (
-                      <div className="flex h-[22px] w-[180px] items-center justify-center">
-                        <LoadingSpinner />
-                      </div>
-                    ) : (
-                      <>
-                        start your conversation
-                        <div className="ml-2">
-                          <AiOutlineArrowRight />
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </button>
-              </div>
-            </div>
+          {/* Start conversation button */}
+          <div className="mt-4">
+            <button type="submit" className="rounded border bg-blue-500 px-6 py-2 text-white hover:bg-blue-700 disabled:bg-gray-300" disabled={!selectedDocuments.length}>
+              Start Conversation
+            </button>
           </div>
-        </div>
+        </form>
       )}
     </div>
   );
