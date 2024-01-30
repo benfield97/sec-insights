@@ -30,6 +30,7 @@ export const TitleAndDropdown = () => {
     apiKey: process.env.NEXT_PUBLIC_BYTESCALE_API_KEY || 'free',
     maxFileCount: 1,
     editor: { images: { crop: false } },
+    mimeTypes: ['application/pdf'],
   };
 
   const handleSubmit = (event: React.FormEvent) => {
