@@ -46,3 +46,31 @@ async def get_document(
         raise HTTPException(status_code=404, detail="Document not found")
 
     return docs[0]
+
+@router.post("/ingest-pdf")
+async def ingest_pdf(
+    url: str, 
+    db: AsyncSession = Depends(get_db)
+) -> schema.Document:
+    """
+    Ingest a PDF document by URL
+    """
+    if not url.startswith('http'):
+        raise HTTPException(status_code=400, detail="URL must be an HTTP-based URL")
+
+    # Define your metadata map here
+    metadata_map = {
+        'sec_document': {
+            # ... your metadata fields
+        }
+    }
+
+    doc = schema.Document(url=url, metadata_map=metadata_map)
+
+    try:
+        upserted_document = await crud.upsert_document_by_url(db, doc)
+        return upserted_document
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
