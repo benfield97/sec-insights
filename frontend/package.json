@@ -9,6 +9,8 @@
     "start": "next start"
   },
   "dependencies": {
+    "@bytescale/sdk": "^3.30.0",
+    "@bytescale/upload-widget-react": "^4.17.0",
     "@headlessui/react": "1.7.15",
     "@heroicons/react": "2.0.18",
     "@sentry/nextjs": "^7.57.0",
