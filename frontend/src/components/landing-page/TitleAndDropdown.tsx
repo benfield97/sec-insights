@@ -30,7 +30,7 @@ export const TitleAndDropdown = () => {
 
   const options = {
     apiKey: 'public_kW15bts8apta6Q33kMrLiGYEgL5R' || 'free',
-    maxFileCount: 1,
+    maxFileCount: 5,
     editor: { images: { crop: false } },
     mimeTypes: ['application/pdf'],
     showFinishButton: true,
