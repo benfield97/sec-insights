@@ -27,7 +27,7 @@ export const TitleAndDropdown = () => {
   } = useDocumentSelector();
 
   const options = {
-    apiKey: process.env.NEXT_PUBLIC_BYTESCALE_API_KEY || 'free',
+    apiKey: 'public_kW15bts8apta6Q33kMrLiGYEgL5R' || 'free',
     maxFileCount: 1,
     editor: { images: { crop: false } },
     mimeTypes: ['application/pdf'],

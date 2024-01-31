@@ -60,9 +60,7 @@ async def ingest_pdf(
 
     # Define your metadata map here
     metadata_map = {
-        'sec_document': {
-            # ... your metadata fields
-        }
+
     }
 
     doc = schema.Document(url=url, metadata_map=metadata_map)
