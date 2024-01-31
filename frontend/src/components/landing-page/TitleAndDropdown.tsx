@@ -26,11 +26,14 @@ export const TitleAndDropdown = () => {
     isDocumentSelectionEnabled,
   } = useDocumentSelector();
 
+  // Configuration for the uploader
+
   const options = {
     apiKey: 'public_kW15bts8apta6Q33kMrLiGYEgL5R' || 'free',
     maxFileCount: 1,
     editor: { images: { crop: false } },
     mimeTypes: ['application/pdf'],
+    showFinishButton: true,
   };
 
   const handleSubmit = (event: React.FormEvent) => {
@@ -92,7 +95,7 @@ export const TitleAndDropdown = () => {
             <UploadComponent
               options={options}
               onComplete={() => console.log('Upload complete')}
-              onUpdate={(data) => console.log('Upload update', data)}
+              onUpdate={(data) => console.log('UploadComponent onUpdate called with data:', data)}
             />
           </div>
 
