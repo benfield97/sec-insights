@@ -7,7 +7,7 @@ export interface BackendDocument {
   created_at: string;
   id: string;
   updated_at: string;
-  // metadata_map: BackendMetadataMap;
+  metadata_map: BackendMetadataMap;
   url: string;
 }
 

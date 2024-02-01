@@ -47,23 +47,20 @@ async def get_document(
 
     return docs[0]
 
-@router.post("/ingest-pdf")
+# Update the endpoint to use the Pydantic model
+@router.post("/ingest-pdf", response_model=schema.Document)
 async def ingest_pdf(
-    url: str, 
+    document_ingestion: schema.DocumentIngestion, 
     db: AsyncSession = Depends(get_db)
 ) -> schema.Document:
     """
-    Ingest a PDF document by URL
+    Ingest a PDF document by URL and name.
     """
-    if not url.startswith('http'):
+    if not document_ingestion.url.startswith('http'):
         raise HTTPException(status_code=400, detail="URL must be an HTTP-based URL")
 
-    # Define your metadata map here
-    metadata_map = {
-
-    }
-
-    doc = schema.Document(url=url, metadata_map=metadata_map)
+    metadata_map = {"name": document_ingestion.name}
+    doc = schema.Document(url=document_ingestion.url, metadata_map=metadata_map)
 
     try:
         upserted_document = await crud.upsert_document_by_url(db, doc)

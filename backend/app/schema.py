@@ -155,7 +155,11 @@ class SecDocumentMetadata(BaseModel):
 
 DocumentMetadataMap = Dict[Union[DocumentMetadataKeysEnum, str], Any]
 
-
+# Define a Pydantic model for the request payload
+class DocumentIngestion(BaseModel):
+    url: str
+    name: str
+    
 class Document(Base):
     url: str
     metadata_map: Optional[DocumentMetadataMap] = None

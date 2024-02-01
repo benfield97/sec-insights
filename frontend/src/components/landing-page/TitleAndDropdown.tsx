@@ -1,33 +1,42 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
-import Select, { SingleValue } from "react-select";
+import Select, { MultiValue } from "react-select";
 import { FiTrash2 } from "react-icons/fi";
 import { useDocumentSelector } from "~/hooks/useDocumentSelector";
 import { backendClient } from "~/api/backend";
 import useIsMobile from "~/hooks/utils/useIsMobile";
 import UploadComponent from '~/components/landing-page/UploadComponent';
+import { SecDocument } from '~/types/document';
 
-// Define the option type for your documents
-interface DocumentOption {
-  value: string;
-  label: string;
-}
 
 export const TitleAndDropdown = () => {
   const router = useRouter();
   const { isMobile } = useIsMobile();
   const [isLoadingConversation, setIsLoadingConversation] = useState(false);
+  const [availableDocuments, setAvailableDocuments] = useState<SecDocument[]>([]);
+  // Fetch and set available documents on component mount
+  useEffect(() => {
+    // Assume fetchDocuments is an async function that fetches the documents
+    const fetchDocuments = async () => {
+      try {
+        const docs = await backendClient.fetchDocuments();
+        console.log(docs); // Add this to inspect the structure
+        setAvailableDocuments(docs);
+      } catch (error) {
+        console.error("Error fetching documents", error);
+      }
+    };
+
+    fetchDocuments();
+  }, []);
 
   const {
-    availableDocuments,
     selectedDocuments,
     setSelectedDocuments,
     handleRemoveDocument,
-    isDocumentSelectionEnabled,
   } = useDocumentSelector();
 
   // Configuration for the uploader
-
   const options = {
     apiKey: 'public_kW15bts8apta6Q33kMrLiGYEgL5R' || 'free',
     maxFileCount: 5,
@@ -36,33 +45,35 @@ export const TitleAndDropdown = () => {
     showFinishButton: true,
   };
 
-  const handleSubmit = (event: React.FormEvent) => {
-    event.preventDefault();
-    if (selectedDocuments.length > 0) {
-      setIsLoadingConversation(true);
-      const selectedDocumentIds = selectedDocuments.map((doc) => doc.id);
-      backendClient
-        .createConversation(selectedDocumentIds)
-        .then((newConversationId) => {
-          setIsLoadingConversation(false);
-          router.push(`/conversation/${newConversationId}`);
-        })
-        .catch(() => {
-          setIsLoadingConversation(false);
-          console.error("Error creating conversation");
-        });
-    }
+  const handleDocumentUploaded = (newDocument: any) => {
+    console.log('New document to add:', newDocument); // Add this line to log the new document
+    setAvailableDocuments(prevDocs => {
+      const updatedDocs = [...prevDocs, newDocument];
+      console.log('Updated documents:', updatedDocs); // Log the updated documents list
+      return updatedDocs;
+    });
   };
 
-  const handleDocumentSelection = (selectedOption: SingleValue<DocumentOption>) => {
-    if (selectedOption) {
-      const selectedDoc = availableDocuments.find(doc => doc.id === selectedOption.value);
-      if (selectedDoc) {
-        setSelectedDocuments([selectedDoc]);
-      }
-    } else {
-      setSelectedDocuments([]);
-    }
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    setIsLoadingConversation(true);
+    const selectedDocumentIds = selectedDocuments.map((doc) => doc.id);
+    backendClient
+      .createConversation(selectedDocumentIds)
+      .then((newConversationId) => {
+        setIsLoadingConversation(false);
+        router.push(`/conversation/${newConversationId}`);
+      })
+      .catch((error) => {
+        setIsLoadingConversation(false);
+        console.error("Error creating conversation", error);
+      });
+  };
+
+  const handleDocumentSelection = (selectedOptions: MultiValue<{ value: string; label: string }>) => {
+    // Assuming SecDocument has an 'id' property
+    const documents = selectedOptions.map(option => availableDocuments.find(doc => doc.id === option.value)).filter((doc): doc is SecDocument => doc !== undefined);
+    setSelectedDocuments(documents);
   };
 
   return (
@@ -91,32 +102,32 @@ export const TitleAndDropdown = () => {
           </h2>
 
           {/* Document Uploader */}
-          <div className="mb-4">
+          <div className="mb-4 w-full flex justify-center items-center rounded-md">
             <UploadComponent
               options={options}
-              onComplete={() => console.log('Upload complete')}
+              onComplete={handleDocumentUploaded}
               onUpdate={(data) => console.log('UploadComponent onUpdate called with data:', data)}
             />
           </div>
 
           {/* Document ID selection */}
           <div className="mb-6">
-            <Select
-              options={availableDocuments.map((doc) => ({ value: doc.id, label: doc.id }))}
-              onChange={handleDocumentSelection}
-              placeholder="Select Document by ID"
-              isDisabled={!isDocumentSelectionEnabled}
-              isClearable
-              className="basic-multi-select"
-              classNamePrefix="select"
-            />
+          <Select
+            options={availableDocuments.map(doc => ({
+              value: doc.id,
+              label: doc.metadata_map?.name ?? 'Unnamed Document' // Safely access name with optional chaining
+            }))}
+            onChange={handleDocumentSelection}
+            placeholder="Select Document by Name"
+            isMulti
+          />
           </div>
 
           {/* List of selected documents */}
           <div className="mb-6 w-full">
             {selectedDocuments.map((doc, index) => (
               <div key={doc.id} className="flex items-center justify-between rounded-md p-2 shadow">
-                <span className="text-sm font-medium text-gray-700">{doc.id}</span>
+                <span className="text-sm font-medium text-gray-700">{doc.metadata_map?.name ?? 'Unnamed Document'}</span>
                 <button
                   type="button"
                   onClick={() => handleRemoveDocument(index)}
@@ -143,3 +154,4 @@ export const TitleAndDropdown = () => {
     </div>
   );
 };
+

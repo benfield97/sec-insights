@@ -6,15 +6,17 @@ export enum DocumentType {
 }
 
 export type Ticker = {
-  ticker: string;
-  fullName: string;
+  // ticker: string;
+  // fullName: string;
 };
 
 export interface SecDocument extends Ticker {
   id: string;
   url: string;
-  year: string;
-  docType: DocumentType;
-  quarter?: string;
+
+  metadata_map: { [key: string]: any };
+  // year: string;
+  // docType: DocumentType;
+  // quarter?: string;
   color: DocumentColorEnum;
 }
