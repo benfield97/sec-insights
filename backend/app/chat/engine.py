@@ -67,6 +67,7 @@ OPENAI_CHAT_LLM_NAME = "gpt-3.5-turbo-0613"
 
 
 def get_s3_fs() -> AsyncFileSystem:
+    print("Calling get_s3_fs")
     s3 = s3fs.S3FileSystem(
         key=settings.AWS_KEY,
         secret=settings.AWS_SECRET,
@@ -82,6 +83,8 @@ def fetch_and_read_document(
 ) -> List[LlamaIndexDocument]:
     # Super hacky approach to get this to feature complete on time.
     # TODO: Come up with better abstractions for this and the other methods in this module.
+    print(f"Calling fetch_and_read_document for document ID: {document.id}")
+
     with TemporaryDirectory() as temp_dir:
         temp_file_path = Path(temp_dir) / f"{str(document.id)}.pdf"
         with open(temp_file_path, "wb") as temp_file:
@@ -131,53 +134,83 @@ def get_storage_context(
     )
 
 
+# This asynchronous function builds a mapping from document IDs to their corresponding vector indices.
+# It is designed to work with documents stored in an Amazon S3 bucket.
+# The function expects a service context, a list of documents, and optionally a file system interface.
 async def build_doc_id_to_index_map(
-    service_context: ServiceContext,
-    documents: List[DocumentSchema],
-    fs: Optional[AsyncFileSystem] = None,
-) -> Dict[str, VectorStoreIndex]:
+    service_context: ServiceContext,           # A context object that provides service-specific dependencies
+    documents: List[DocumentSchema],           # A list of documents to be processed
+    fs: Optional[AsyncFileSystem] = None,      # An optional asynchronous file system interface
+) -> Dict[str, VectorStoreIndex]:              # Returns a dictionary mapping document IDs to vector indices
+
+    # Define the directory in S3 where the vectors are persisted.
     persist_dir = f"{settings.S3_BUCKET_NAME}"
 
+    # Retrieve the singleton instance of the vector store.
     vector_store = await get_vector_store_singleton()
+
     try:
+        # Try to get the storage context from the S3 bucket.
         try:
             storage_context = get_storage_context(persist_dir, vector_store, fs=fs)
         except FileNotFoundError:
+            # If the storage context is not found, log this information.
             logger.info(
                 "Could not find storage context in S3. Creating new storage context."
             )
+            # Create a new storage context with default settings.
             storage_context = StorageContext.from_defaults(
                 vector_store=vector_store, fs=fs
             )
+            # Persist the new storage context to the S3 bucket.
             storage_context.persist(persist_dir=persist_dir, fs=fs)
+
+        # Create a list of document IDs to index.
         index_ids = [str(doc.id) for doc in documents]
+        # Load the vector indices from the storage context.
         indices = load_indices_from_storage(
             storage_context,
             index_ids=index_ids,
             service_context=service_context,
         )
+        # Create a mapping from document IDs to their vector indices.
         doc_id_to_index = dict(zip(index_ids, indices))
+        # Log that the indices have been loaded successfully.
         logger.debug("Loaded indices from storage.")
+
     except ValueError:
+        # If there is an error loading the indices, log the error.
         logger.error(
             "Failed to load indices from storage. Creating new indices. "
             "If you're running the seed_db script, this is normal and expected."
         )
+        # Create a new storage context with default settings.
         storage_context = StorageContext.from_defaults(
             persist_dir=persist_dir, vector_store=vector_store, fs=fs
         )
+        # Initialize an empty dictionary for the document ID to index mapping.
         doc_id_to_index = {}
+
+        # For each document in the provided list:
         for doc in documents:
+            # Fetch and read the document content.
             llama_index_docs = fetch_and_read_document(doc)
+            # Add the document to the document store.
             storage_context.docstore.add_documents(llama_index_docs)
+            # Create a vector index from the document.
             index = VectorStoreIndex.from_documents(
                 llama_index_docs,
                 storage_context=storage_context,
                 service_context=service_context,
             )
+            # Set the index ID to the document ID.
             index.set_index_id(str(doc.id))
+            # Persist the index to the S3 bucket.
             index.storage_context.persist(persist_dir=persist_dir, fs=fs)
+            # Add the index to the document ID to index mapping.
             doc_id_to_index[str(doc.id)] = index
+
+    # Return the mapping from document IDs to vector indices.
     return doc_id_to_index
 
 

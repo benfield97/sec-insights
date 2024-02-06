@@ -12,6 +12,7 @@ print(parent_directory)
 # poetry run python scripts/seed_db.py
 
 # docker 
+# docker desktop needs to be open
 # export PATH="/Applications/Docker.app/Contents/Resources/bin:$PATH"
 
 

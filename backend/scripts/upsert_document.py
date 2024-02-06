@@ -16,7 +16,7 @@ async def upsert_single_document(doc_url: str):
         "cik": "0001326801",
         "year": '2022',
         "doc_type": "10-K",
-        "company_name": "ahhh wtf holy shit who am i",
+        "company_name": "ndklns",
         "company_ticker": "ARXIVTEST",
         "accession_number": "0001326801-23-000013",
         "filed_as_of_date": "2023-02-02T00:00:00",
